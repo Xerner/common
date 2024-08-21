@@ -2,9 +2,9 @@ import { HttpEvent, HttpEventType, HttpHandler, HttpInterceptor, HttpRequest } f
 import { Inject, Injectable } from "@angular/core";
 import { Observable, tap } from "rxjs";
 import { HttpCacheClient } from "../services/http-cache-client.service";
+import { IHttpCacheSettings } from "../../interfaces/IHttpCacheSettings";
 import { HttpCacheStore } from "../stores/http-cache.store";
-import { IHttpCacheSettings } from "../interfaces/IHttpCacheSettings";
-import { HTTP_CACHE_SETTINGS } from "../interfaces";
+import { HTTP_CACHE_SETTINGS } from "../injection-tokens/IHttpCacheSettings";
 
 /** Also see {@link HttpCacheClient} */
 @Injectable()
