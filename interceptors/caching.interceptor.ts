@@ -1,23 +1,24 @@
 import { HttpEvent, HttpEventType, HttpHandler, HttpInterceptor, HttpRequest } from "@angular/common/http";
-import { Injectable } from "@angular/core";
+import { Inject, Injectable } from "@angular/core";
 import { Observable, tap } from "rxjs";
 import { HttpCacheClient } from "../services/http-cache-client.service";
 import { HttpCacheStore } from "../stores/http-cache.store";
-import { IHttpCacheSettings } from "../interfaces/ICacheSettings";
+import { IHttpCacheSettings } from "../interfaces/IHttpCacheSettings";
+import { HTTP_CACHE_SETTINGS } from "../interfaces";
 
 /** Also see {@link HttpCacheClient} */
 @Injectable()
 export class HttpCachingInterceptor implements HttpInterceptor {
   constructor(
-    private cacheSettings: IHttpCacheSettings,
+    @Inject(HTTP_CACHE_SETTINGS) private cacheSettings: IHttpCacheSettings,
     private cacheStore: HttpCacheStore,
   ) { }
 
   intercept(req: HttpRequest<any>, handler: HttpHandler): Observable<HttpEvent<unknown>> {
     // passthrough if caching is disabled
-    var shouldCacheResponses = this.cacheSettings.caching
-      && this.cacheSettings.caching.enableInterceptor
-      && !this.cacheSettings.caching.enabled;
+    var shouldCacheResponses = this.cacheSettings
+      && this.cacheSettings.enableInterceptor
+      && !this.cacheSettings.enabled;
     if (shouldCacheResponses) {
       // Cache url results
       return handler.handle(req).pipe(

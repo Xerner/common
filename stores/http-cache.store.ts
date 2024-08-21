@@ -1,21 +1,20 @@
-import { Injectable } from '@angular/core';
-import { HttpResponse } from '@angular/common/http';
-import { fileCache } from '../../settings/cache/cache';
-import { IHttpCacheSettings } from '../interfaces/ICacheSettings';
+import { Inject, Injectable } from '@angular/core';
+import { HTTP_CACHE_SETTINGS, IHttpCacheSettings } from '../interfaces/IHttpCacheSettings';
+import { IHttpCache } from '../interfaces/IHttpCache';
 
 /** Also see {@link HttpCacheClient} */
 @Injectable({ providedIn: 'root' })
 export class HttpCacheStore {
-  urlCache: Record<string, HttpResponse<any>> = {};
+  urlCache: IHttpCache = {};
 
   constructor(
-    private cacheSettings: IHttpCacheSettings,
+    @Inject(HTTP_CACHE_SETTINGS) private cacheSettings: IHttpCacheSettings,
   ) { }
 
-  loadCache() {
-    if (this.cacheSettings.caching.cacheSource === "file") {
-      console.log("Using cache from ", this.cacheSettings.caching.cacheSource, fileCache);
-      this.urlCache = fileCache as Record<string, HttpResponse<any>>;
+  loadCache(fileCache: IHttpCache) {
+    if (this.cacheSettings.cacheSource === "file") {
+      console.log("Using cache from ", this.cacheSettings.cacheSource, fileCache);
+      this.urlCache = fileCache;
     }
   }
 
