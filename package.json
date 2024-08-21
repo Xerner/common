@@ -1,0 +1,12 @@
+{
+  "name": "common",
+  "version": "1.0.0",
+  "scripts": {},
+  "author": "Kenneth Mead",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@angular/common": "^18.2.0",
+    "@angular/core": "^18.2.0"
+  }
+}
