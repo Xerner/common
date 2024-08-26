@@ -7,16 +7,16 @@ import { QUERY_PARAM_KEYS } from './provider';
 @Injectable({
   providedIn: 'root'
 })
-export class QueryParamsStore {
-  readonly queryParams: Record<keyof QueryParamKeys, Observable<string | null>> = {}
+export class QueryParamsStore<T> {
+  readonly queryParams = new Map<keyof T, Observable<string | null>>();
 
   constructor(
-    @Inject(QUERY_PARAM_KEYS) public queryParamKeys: QueryParamKeys,
+    @Inject(QUERY_PARAM_KEYS) public queryParamKeys: QueryParamKeys<T>,
     private router: Router,
     private route: ActivatedRoute
   ) {
     for (const key in queryParamKeys) {
-      this.queryParams[key] = this.createQueryParamObservable(key)
+      this.queryParams.set(key, this.createQueryParamObservable(key))
     }
   }
 
@@ -24,11 +24,11 @@ export class QueryParamsStore {
     return this.route.queryParamMap.pipe(map<ParamMap, string | null>(params => params.get(name)));
   }
 
-  update<T>(queryParamKey: keyof QueryParamKeys, value: T, queryParamsHandling: QueryParamsHandling = 'merge') {
+  update<T>(queryParamKey: keyof QueryParamKeys<T>, value: T, queryParamsHandling: QueryParamsHandling = 'merge') {
     if (value == null) {
       return;
     }
-    var currentValue = this.route.snapshot.queryParamMap.get(queryParamKey);
+    var currentValue = this.route.snapshot.queryParamMap.get(queryParamKey.toString());
     const queryParams: Params = { [queryParamKey]: value.toString() };
     if (currentValue == value) {
       return;
