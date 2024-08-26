@@ -1,7 +1,8 @@
 import { Inject, Injectable } from '@angular/core';
-import { IHttpCache } from '../interfaces/IHttpCache';
-import { IHttpCacheSettings } from '../../interfaces/IHttpCacheSettings';
-import { HTTP_CACHE_SETTINGS } from '../injection-tokens/IHttpCacheSettings';
+import { IHttpCache } from './interfaces/IHttpCache';
+import { IHttpCacheSettings } from './interfaces/IHttpCacheSettings';
+import { HTTP_CACHE_SETTINGS } from './settings-token';
+import { HttpCacheClient } from './http-cache-client.service';
 
 /** Also see {@link HttpCacheClient} */
 @Injectable({ providedIn: 'root' })

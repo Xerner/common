@@ -1,5 +1,6 @@
 export interface IHttpCacheSettings {
-  enabled: boolean;
+  enableClient: boolean;
   enableInterceptor: boolean;
   cacheSource: "file" | "cookies";
+  onlyUseCache: boolean;
 }
