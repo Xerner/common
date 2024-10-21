@@ -19,14 +19,14 @@ import { UntypedQueryParamKeys } from './query-param-keys';
   providedIn: 'root'
 })
 export class QueryParamsStore<TQueryParamEnum extends string> {
-  observables = new Map<TQueryParamEnum, Observable<string[] | null>>();
-  private readonly queryParams_ = new Map<TQueryParamEnum, WritableSignal<string[] | null>>();
+  observables: Partial<Record<TQueryParamEnum, Observable<string[] | null>>> = {};
+  private readonly queryParams: Partial<Record<TQueryParamEnum, WritableSignal<string[] | null>>> = {};
   /**
    * A map of all query parameters that are being tracked by the store as defined in the {@link TQueryParamEnum} enumerator.
    * Automatically updates when the query parameter changes using {@link Router}
    */
-  get queryParams(): Map<TQueryParamEnum, Signal<string[] | null>> {
-    return this.queryParams_;
+  get params(): Partial<Record<TQueryParamEnum, Signal<string[] | null>>> {
+    return this.queryParams;
   }
 
   constructor(
@@ -42,7 +42,7 @@ export class QueryParamsStore<TQueryParamEnum extends string> {
    */
   initializeQueryParamObservables() {
     for (const key in this.queryParamKeys) {
-      this.observables.set(key as TQueryParamEnum, this.getObservable(key as TQueryParamEnum));
+      this.observables[key as TQueryParamEnum] = this.getObservable(key as TQueryParamEnum);
     }
   }
 
@@ -64,11 +64,11 @@ export class QueryParamsStore<TQueryParamEnum extends string> {
       }
       var paramValues = params.getAll(key);
       var typedKey = key as TQueryParamEnum;
-      if (this.queryParams_.has(typedKey) == false) {
-        this.queryParams_.set(typedKey, signal(paramValues));
+      if (Object.keys(this.queryParams).includes(typedKey) == false) {
+        this.queryParams[typedKey] = signal(paramValues);
         return;
       }
-      var paramsSignal = this.queryParams_.get(typedKey)
+      var paramsSignal = this.queryParams[typedKey];
       if (paramsSignal !== undefined) {
         paramsSignal.set(paramValues);
       }
