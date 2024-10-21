@@ -2,7 +2,7 @@ import { Inject, Injectable, signal, Signal, WritableSignal } from '@angular/cor
 import { ActivatedRoute, ParamMap, Params, QueryParamsHandling, Router, provideRouter } from '@angular/router';
 import { map, Observable } from 'rxjs';
 import { QUERY_PARAM_KEYS } from './provider';
-import { UntypedQueryParamKeys } from './query-param-keys';
+import { QueryParamKeys, UntypedQueryParamKeys } from './query-param-keys';
 
 /**
  * A service that provides an abstraction layer to interact with url query parameters as signals. 
@@ -19,18 +19,18 @@ import { UntypedQueryParamKeys } from './query-param-keys';
   providedIn: 'root'
 })
 export class QueryParamsStore<TQueryParamEnum extends string> {
-  observables: Partial<Record<TQueryParamEnum, Observable<string[] | null>>> = {};
-  private readonly queryParams: Partial<Record<TQueryParamEnum, WritableSignal<string[] | null>>> = {};
+  observables: Partial<Record<TQueryParamEnum, Observable<string[]>>> = {};
+  private readonly queryParams: Partial<Record<TQueryParamEnum, WritableSignal<string[]>>> = {};
   /**
    * A map of all query parameters that are being tracked by the store as defined in the {@link TQueryParamEnum} enumerator.
    * Automatically updates when the query parameter changes using {@link Router}
    */
-  get params(): Partial<Record<TQueryParamEnum, Signal<string[] | null>>> {
-    return this.queryParams;
+  get params(): Record<TQueryParamEnum, Signal<string[]>> {
+    return this.queryParams as Record<TQueryParamEnum, Signal<string[]>>;
   }
 
   constructor(
-    @Inject(QUERY_PARAM_KEYS) private queryParamKeys: UntypedQueryParamKeys,
+    @Inject(QUERY_PARAM_KEYS) public keys: QueryParamKeys<TQueryParamEnum>,
     private router: Router,
     private route: ActivatedRoute
   ) {
@@ -41,16 +41,17 @@ export class QueryParamsStore<TQueryParamEnum extends string> {
    * Creates observables for all query parameters defined in the {@link TQueryParamEnum} enumerator and stores them in the {@link observables} property
    */
   initializeQueryParamObservables() {
-    for (const key in this.queryParamKeys) {
-      this.observables[key as TQueryParamEnum] = this.getObservable(key as TQueryParamEnum);
+    for (const key in this.keys) {
+      var typedKey = key as unknown as TQueryParamEnum;
+      this.observables[typedKey] = this.getObservable(typedKey);
     }
   }
 
   /**
    * Creates a shortcut from `this.route.queryParamMap` to the desired query parameter
    */
-  private getObservable(name: TQueryParamEnum): Observable<string[] | null> {
-    return this.route.queryParamMap.pipe(map<ParamMap, string[] | null>(params => params.getAll(name)));
+  private getObservable(name: TQueryParamEnum): Observable<string[]> {
+    return this.route.queryParamMap.pipe(map<ParamMap, string[]>(params => params.getAll(name)));
   }
 
   /**
@@ -58,9 +59,9 @@ export class QueryParamsStore<TQueryParamEnum extends string> {
    */
   private subscribeToQueryParamChanges(params: ParamMap) {
     params.keys.forEach((key) => {
-      var keyIsNotInEnum = Object.values(this.queryParamKeys).includes(key);
-      if (keyIsNotInEnum) {
-        throw new Error(`Query parameter key '${key}' is not defined in the provided enum`);
+      var keyIsNotAnExpectedQueryParam = Object.values(this.keys).includes(key) == false;
+      if (keyIsNotAnExpectedQueryParam) {
+        throw new Error(`Query parameter '${key}' is not a value in the provided enum`);
       }
       var paramValues = params.getAll(key);
       var typedKey = key as TQueryParamEnum;
@@ -83,6 +84,10 @@ export class QueryParamsStore<TQueryParamEnum extends string> {
    * @returns 
    */
   set<T>(name: TQueryParamEnum, value: T, queryParamsHandling: QueryParamsHandling = 'merge') {
+    var keyIsNotAnExpectedQueryParam = Object.keys(this.keys).includes(name) == false;
+    if (keyIsNotAnExpectedQueryParam) {
+      throw new Error(`Query parameter enumerator '${name}' is not a key in the provided enum`);
+    }
     if (value === undefined) {
       value = null as T;
     }
