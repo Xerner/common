@@ -2,7 +2,7 @@ import { Inject, Injectable, signal, Signal, WritableSignal } from '@angular/cor
 import { ActivatedRoute, ParamMap, Params, QueryParamsHandling, Router, provideRouter } from '@angular/router';
 import { map, Observable } from 'rxjs';
 import { QUERY_PARAM_KEYS } from './provider';
-import { QueryParamKeys, UntypedQueryParamKeys } from './query-param-keys';
+import { QueryParamKeys } from './query-param-keys';
 
 /**
  * A service that provides an abstraction layer to interact with url query parameters as signals. 
