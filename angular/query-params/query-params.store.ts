@@ -34,6 +34,7 @@ export class QueryParamsStore<TQueryParamEnum extends string> {
     private router: Router,
     private route: ActivatedRoute
   ) {
+    this.createQueryParamSignalsFromEnum();
     this.route.queryParamMap.subscribe(this.subscribeToQueryParamChanges.bind(this));
   }
 
@@ -73,6 +74,16 @@ export class QueryParamsStore<TQueryParamEnum extends string> {
         paramsSignal.set(paramValues);
       }
     })
+  }
+
+  /**
+   * Creates signals for all query parameters defined in the {@link TQueryParamEnum} enumerator and stores them in the {@link queryParams} property
+   */
+  private createQueryParamSignalsFromEnum() {
+    for (const key in this.keys) {
+      var typedKey = key as unknown as TQueryParamEnum;
+      this.queryParams[typedKey] = signal([]);
+    }
   }
 
   /**
