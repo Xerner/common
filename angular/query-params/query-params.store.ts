@@ -2,7 +2,7 @@ import { Inject, Injectable, signal, Signal, WritableSignal } from '@angular/cor
 import { ActivatedRoute, ParamMap, Params, QueryParamsHandling, Router, provideRouter } from '@angular/router';
 import { map, Observable } from 'rxjs';
 import { QUERY_PARAM_KEYS } from './provider';
-import { QueryParamKeys, UntypedQueryParamKeys } from './query-param-keys';
+import { QueryParamKeys } from './query-param-keys';
 
 /**
  * A service that provides an abstraction layer to interact with url query parameters as signals. 
@@ -19,21 +19,23 @@ import { QueryParamKeys, UntypedQueryParamKeys } from './query-param-keys';
   providedIn: 'root'
 })
 export class QueryParamsStore<TQueryParamEnum extends string> {
-  observables: Partial<Record<TQueryParamEnum, Observable<string[]>>> = {};
-  private readonly queryParams: Partial<Record<TQueryParamEnum, WritableSignal<string[]>>> = {};
+  observables: { [key in TQueryParamEnum]: Observable<string[]> } = {} as any;
+  private readonly queryParams: { [key in TQueryParamEnum]: WritableSignal<string[]> } = {} as any;
+
   /**
    * A map of all query parameters that are being tracked by the store as defined in the {@link TQueryParamEnum} enumerator.
    * Automatically updates when the query parameter changes using {@link Router}
    */
-  get params(): Record<TQueryParamEnum, Signal<string[]>> {
-    return this.queryParams as Record<TQueryParamEnum, Signal<string[]>>;
+  get params(): { [key in TQueryParamEnum]: Signal<string[]>} {
+    return this.queryParams;
   }
 
   constructor(
-    @Inject(QUERY_PARAM_KEYS) public keys: QueryParamKeys<TQueryParamEnum>,
+    @Inject(QUERY_PARAM_KEYS) public readonly keys: QueryParamKeys<TQueryParamEnum>,
     private router: Router,
     private route: ActivatedRoute
   ) {
+    this.createQueryParamSignalsFromEnum();
     this.route.queryParamMap.subscribe(this.subscribeToQueryParamChanges.bind(this));
   }
 
@@ -74,6 +76,16 @@ export class QueryParamsStore<TQueryParamEnum extends string> {
         paramsSignal.set(paramValues);
       }
     })
+  }
+
+  /**
+   * Creates signals for all query parameters defined in the {@link TQueryParamEnum} enumerator and stores them in the {@link queryParams} property
+   */
+  private createQueryParamSignalsFromEnum() {
+    for (const key in this.keys) {
+      var typedKey = key as unknown as TQueryParamEnum;
+      this.queryParams[typedKey] = signal([]);
+    }
   }
 
   /**
