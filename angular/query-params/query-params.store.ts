@@ -19,18 +19,19 @@ import { QueryParamKeys } from './query-param-keys';
   providedIn: 'root'
 })
 export class QueryParamsStore<TQueryParamEnum extends string> {
-  observables: Partial<Record<TQueryParamEnum, Observable<string[]>>> = {};
-  private readonly queryParams: Partial<Record<TQueryParamEnum, WritableSignal<string[]>>> = {};
+  observables: { [key in TQueryParamEnum]: Observable<string[]> } = {} as any;
+  private readonly queryParams: { [key in TQueryParamEnum]: WritableSignal<string[]> } = {} as any;
+
   /**
    * A map of all query parameters that are being tracked by the store as defined in the {@link TQueryParamEnum} enumerator.
    * Automatically updates when the query parameter changes using {@link Router}
    */
-  get params(): Record<TQueryParamEnum, Signal<string[]>> {
-    return this.queryParams as Record<TQueryParamEnum, Signal<string[]>>;
+  get params(): { [key in TQueryParamEnum]: Signal<string[]>} {
+    return this.queryParams;
   }
 
   constructor(
-    @Inject(QUERY_PARAM_KEYS) public keys: QueryParamKeys<TQueryParamEnum>,
+    @Inject(QUERY_PARAM_KEYS) public readonly keys: QueryParamKeys<TQueryParamEnum>,
     private router: Router,
     private route: ActivatedRoute
   ) {
