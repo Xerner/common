@@ -1,6 +1,6 @@
-import { MathExt } from './math'
+import { MATH } from './math'
 
-export class ArrayExt {
+export class ArrayService {
   /**
      *
      * @param array An array of numbers
@@ -13,6 +13,8 @@ export class ArrayExt {
   }
 
   randomArrayItem<T>(array: T[]) {
-    return array[MathExt.randomInt(array.length)];
+    return array[MATH.randomInt(array.length)];
   }
 }
+
+export const ARRAY = new ArrayService();

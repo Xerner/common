@@ -1,3 +1,5 @@
-export { MathExt } from './math';
-export { Conversions } from './conversions';
-export { ArrayExt } from './arrays';
+export { ApiHelperService } from '../angular/services/api-helper/api-helper.service';
+export { ArrayService, ARRAY } from './arrays';
+export { ConversionsService, CONVERSIONS } from './conversions';
+export { MathService, MATH } from './math';
+export { ObjectsService, OBJECTS } from './objects';

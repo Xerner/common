@@ -1,10 +1,11 @@
-export const ObjectsExt = {
+export class ObjectsService {
   /**
    * JSON stringifies and parses the object to create a deep clone of it
    */
   deepClone<T>(object: T): T {
     return JSON.parse(JSON.stringify(object)) as T
-  },
+  }
+  
   /**
    * absolute hack to get the name of a javascript object very quickly. See examples below.
    *
@@ -19,7 +20,8 @@ export const ObjectsExt = {
    */
   nameOf(obj: object) {
     return Object.keys(obj)[0];
-  },
+  }
+
   /**
    * Extracts a property from an object using a path string or array of strings
    * 
@@ -42,7 +44,8 @@ export const ObjectsExt = {
     }
     path.shift();
     return this.getProperty(object, path, delimiter);
-  },
+  }
+
   /**
    * Converts an object properties path to a property name that can be used to access the property 
    * 
@@ -55,3 +58,5 @@ export const ObjectsExt = {
     return newPath;
   }
 }
+
+export const OBJECTS = new ObjectsService();
