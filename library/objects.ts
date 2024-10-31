@@ -42,8 +42,8 @@ export class ObjectsService {
         return null;
       }
     }
-    path.shift();
-    return this.getProperty(object, path, delimiter);
+    var nextPropertyToSearch = path.shift();
+    return this.getProperty(object[nextPropertyToSearch!], path, delimiter);
   }
 
   /**
