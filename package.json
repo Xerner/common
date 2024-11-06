@@ -8,6 +8,7 @@
   "dependencies": {
     "@angular/common": "^18.2.0",
     "@angular/core": "^18.2.0",
+    "@angular/router": "^18.2.0",
     "luxon": "^3.4.4"
   }
 }

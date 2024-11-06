@@ -2,9 +2,8 @@ import { Inject, Injectable, signal, Signal, WritableSignal } from '@angular/cor
 import { ActivatedRoute, ParamMap, Params, QueryParamsHandling, Router, provideRouter } from '@angular/router';
 import { map, Observable } from 'rxjs';
 import { QUERY_PARAM_KEYS } from './provider';
-import { QueryParamKeys } from './query-param-keys';
-import { Param } from './types/Param';
-import { ParamKeys } from './types/ParamKey';
+import { QueryParamValue } from './types/QueryParamValue';
+import { QueryParamKeys } from './types/QueryParamKeys';
 
 /**
  * A service that provides an abstraction layer to interact with url query parameters as signals. 
@@ -15,26 +14,26 @@ import { ParamKeys } from './types/ParamKey';
  * - An object {@link TQueryParamKey} that maps its keys to the expected query parameter names. A Typescript enum is recommended for this, but not required.
  * 
  * @see {@link provideRouter}
- * @see {@link QueryParamKeys}
  */
 @Injectable()
-export class QueryParamsService<TQueryParamKey extends ParamKeys> {
-  observables: { [key in keyof TQueryParamKey]: Observable<Param[]> } = {} as any;
-  private readonly queryParams: { [key in keyof TQueryParamKey]: WritableSignal<Param[]> } = {} as any;
+export class QueryParamsService<TQueryParamKey> {
+  observables: { [key in keyof TQueryParamKey]: Observable<QueryParamValue[]> } = {} as any;
+  private readonly queryParams: { [key in keyof TQueryParamKey]: WritableSignal<QueryParamValue[]> } = {} as any;
 
   /**
    * A map of all query parameters that are being tracked by the store as defined in the {@link TQueryParamKey} enumerator.
    * Automatically updates when the query parameter changes using {@link Router}
    */
-  get params(): { [key in keyof TQueryParamKey]: Signal<Param[]>} {
+  get params(): { [key in keyof TQueryParamKey]: Signal<QueryParamValue[]>} {
     return this.queryParams;
   }
 
   constructor(
-    @Inject(QUERY_PARAM_KEYS) public readonly keys: { [key in keyof TQueryParamKey]: Signal<Param[]>},
+    @Inject(QUERY_PARAM_KEYS) public readonly keys: QueryParamKeys<TQueryParamKey>,
     private router: Router,
     private route: ActivatedRoute
   ) {
+    this.initializeQueryParamObservables();
     this.createQueryParamSignalsFromEnum();
     this.route.queryParamMap.subscribe(this.subscribeToQueryParamChanges.bind(this));
   }
@@ -44,7 +43,7 @@ export class QueryParamsService<TQueryParamKey extends ParamKeys> {
    */
   initializeQueryParamObservables() {
     for (const key in this.keys) {
-      var typedKey = key as unknown as keyof TQueryParamKey;
+      var typedKey = key as keyof TQueryParamKey & string;
       this.observables[typedKey] = this.getObservable(typedKey);
     }
   }
@@ -52,7 +51,7 @@ export class QueryParamsService<TQueryParamKey extends ParamKeys> {
   /**
    * Creates a shortcut from `this.route.queryParamMap` to the desired query parameter
    */
-  private getObservable(name: keyof TQueryParamKey): Observable<Param[]> {
+  private getObservable(name: keyof TQueryParamKey & string): Observable<QueryParamValue[]> {
     return this.route.queryParamMap.pipe(map(params => params.getAll(name)));
   }
 
@@ -66,7 +65,7 @@ export class QueryParamsService<TQueryParamKey extends ParamKeys> {
         throw new Error(`Query parameter '${key}' is not a value in the provided enum`);
       }
       var paramValues = params.getAll(key);
-      var typedKey = key as keyof TQueryParamKey;
+      var typedKey = key as keyof TQueryParamKey & string;
       if (Object.keys(this.queryParams).includes(typedKey) == false) {
         this.queryParams[typedKey] = signal(paramValues);
         return;
@@ -95,7 +94,7 @@ export class QueryParamsService<TQueryParamKey extends ParamKeys> {
    * @param queryParamsHandling The strategy for handling the query parameters
    * @returns 
    */
-  set<T>(name: keyof TQueryParamKey, value: T, queryParamsHandling: QueryParamsHandling = 'merge') {
+  set<T>(name: keyof TQueryParamKey & string, value: T, queryParamsHandling: QueryParamsHandling = 'merge') {
     var keyIsNotAnExpectedQueryParam = Object.keys(this.keys).includes(name) == false;
     if (keyIsNotAnExpectedQueryParam) {
       throw new Error(`Query parameter enumerator '${name}' is not a key in the provided enum`);
