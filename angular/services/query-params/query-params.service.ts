@@ -75,6 +75,11 @@ export class QueryParamsService<TQueryParamKey> {
         paramsSignal.set(paramValues);
       }
     })
+    var knownKeys = Object.keys(this.keys);
+    var unknownKeys = knownKeys.filter(key => params.keys.includes(key) == false);
+    unknownKeys.forEach((key)  => {
+      this.queryParams[key as keyof TQueryParamKey & string].set([]);
+    });
   }
 
   /**
@@ -102,10 +107,6 @@ export class QueryParamsService<TQueryParamKey> {
     if (value === undefined) {
       value = null as T;
     }
-    var currentValue = this.route.snapshot.queryParamMap.get(name);
-    if (currentValue == value) {
-      return;
-    }
     const queryParams: Params = { [name]: value === null ? null : value!.toString() };
     this.router.navigate(
       [],
@@ -113,6 +114,7 @@ export class QueryParamsService<TQueryParamKey> {
         relativeTo: this.route,
         queryParams,
         queryParamsHandling: queryParamsHandling, // remove to replace all query params by provided
+        replaceUrl: true
       }
     );
   }
