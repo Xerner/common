@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpInterceptor, HttpHandler, HttpRequest } from '@angular/common/http';
+import { HttpInterceptor, HttpHandler, HttpRequest, HttpEventType } from '@angular/common/http';
 import { tap } from 'rxjs';
 import { LOADING_SERVICE_TOKEN } from './token';
 
@@ -13,7 +13,9 @@ export class LoadingInterceptor implements HttpInterceptor {
     loadingService.startLoading(loadingItem);
     return next.handle(req)
       .pipe(tap(event => {
-        loadingService.stopLoading(loadingItem);
+        if (event.type === HttpEventType.Response) {
+          loadingService.stopLoading(loadingItem);
+        }
         return event;
       }));
   }
