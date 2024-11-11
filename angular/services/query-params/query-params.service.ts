@@ -6,13 +6,13 @@ import { QueryParamValue } from './types/QueryParamValue';
 import { QueryParamKeys } from './types/QueryParamKeys';
 
 /**
- * A service that provides an abstraction layer to interact with url query parameters as signals. 
+ * A service that provides an abstraction layer to interact with url query parameters as signals.
  * To subscribe to query parameter changes like an event listener, use the `queryParamMap` property on {@link Router}.
- * 
- * Requires 
+ *
+ * Requires
  * - Angulars {@link Router} service to be provided. see {@link provideRouter}
  * - An object {@link TQueryParamKey} that maps its keys to the expected query parameter names. A Typescript enum is recommended for this, but not required.
- * 
+ *
  * @see {@link provideRouter}
  */
 @Injectable()
@@ -97,14 +97,15 @@ export class QueryParamsService<TQueryParamKey> {
    * @param name The query parameter key to update
    * @param value The value to update the query parameter to
    * @param queryParamsHandling The strategy for handling the query parameters
-   * @returns 
+   * @returns
    */
   set<T>(name: keyof TQueryParamKey & string, value: T, queryParamsHandling: QueryParamsHandling = 'merge') {
     var keyIsNotAnExpectedQueryParam = Object.keys(this.keys).includes(name) == false;
     if (keyIsNotAnExpectedQueryParam) {
       throw new Error(`Query parameter enumerator '${name}' is not a key in the provided enum`);
     }
-    if (value === undefined) {
+    var isEmptyArray = Array.isArray(value) && value.length == 0;
+    if (value === undefined || isEmptyArray) {
       value = null as T;
     }
     const queryParams: Params = { [name]: value === null ? null : value!.toString() };

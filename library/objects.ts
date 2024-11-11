@@ -1,3 +1,5 @@
+import { CompiledEnum, StringEnum } from "../types/Enum";
+
 export class ObjectsService {
   /**
    * JSON stringifies and parses the object to create a deep clone of it
@@ -5,7 +7,7 @@ export class ObjectsService {
   deepClone<T>(object: T): T {
     return JSON.parse(JSON.stringify(object)) as T
   }
-  
+
   /**
    * absolute hack to get the name of a javascript object very quickly. See examples below.
    *
@@ -24,7 +26,7 @@ export class ObjectsService {
 
   /**
    * Extracts a property from an object using a path string or array of strings
-   * 
+   *
    * @param object The object to extract the property from
    * @param path The path to the property to extract as a string delimited by the given delimiter or an array of strings
    * @returns The properties value or null if it does not exist
@@ -47,8 +49,8 @@ export class ObjectsService {
   }
 
   /**
-   * Converts an object properties path to a property name that can be used to access the property 
-   * 
+   * Converts an object properties path to a property name that can be used to access the property
+   *
    * @param path The object properties path to convert to a property name
    * @returns A string that can be used to access the property
    */
