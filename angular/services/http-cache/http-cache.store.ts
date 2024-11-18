@@ -15,20 +15,8 @@ export class HttpCacheStore {
 
   loadCache(fileCache: IHttpCache) {
     if (this.cacheSettings.cacheSource === "file") {
-      console.log("Using cache from ", this.cacheSettings.cacheSource, fileCache);
+      console.log("Using pre-fetched cache from file at", this.cacheSettings.cacheSource, "with values", fileCache);
       this.urlCache = fileCache;
     }
-  }
-
-  openCache() {
-    console.log(this.urlCache);
-    // var json = JSON.stringify(this.urlCache, null, 2);
-    // var newTab = window.open('data:text/json,' + encodeURIComponent(json), '_blank');
-    // if (newTab === null) {
-    //   window.alert("Failed to open new tab. Please allow popups for this site.");
-    //   console.log("Failed to open new tab. Please allow popups for this site.");
-    //   return;
-    // }
-    // newTab.focus();
   }
 }
