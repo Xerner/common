@@ -1,14 +1,6 @@
-import { HttpResponse } from "@angular/common/http";
+import { HttpRequest, HttpResponse } from "@angular/common/http";
 
-/**
- * Example
- * 
- * ```ts
- * {
- *  "https://www.example.com": {
- *     body: "hello world"
- *   }
- * }
- * ```
- */
-export type IHttpCache = Record<string, HttpResponse<any>>;
+export interface IHttpCacheItem<T = any> {
+  request: HttpRequest<T>;
+  response: HttpResponse<T>;
+}

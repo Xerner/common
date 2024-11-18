@@ -1,55 +1,48 @@
 import { EnvironmentProviders, makeEnvironmentProviders, Provider } from "@angular/core";
-import { HttpCacheStore } from "./http-cache.store";
-import { HttpClient, HTTP_INTERCEPTORS, HttpHandler, ɵHttpInterceptorHandler, HttpFeature, HttpFeatureKind } from "@angular/common/http";
-import { HttpCacheClient } from "./http-cache-client.service";
-import { HTTP_CACHE_SETTINGS } from "./settings-token";
+import { HttpCacheService } from "./http-cache.service";
+import { HTTP_INTERCEPTORS, HttpFeature, HttpFeatureKind, provideHttpClient } from "@angular/common/http";
+import { HTTP_CACHE_SETTINGS, PRELOADED_HTTP_CACHE } from "./tokens";
 import { IHttpCacheSettings } from "./interfaces/IHttpCacheSettings";
 import { HttpCachingInterceptor } from "./caching.interceptor";
+import { IHttpCacheItem } from "./interfaces/IHttpCache";
 
 /**
- * Configures {@link HttpCacheClient} to be available for injection instead of
- * Angulars usual {@link HttpClient}
+ * Provides an HTTP client with caching capabilities.
  *
- * If `onlyUseCache = true` then `enableClient` is automatically set to `true` regardless of its configured value
+ * @param {IHttpCacheSettings | null} cacheSettings - Custom cache settings to override the defaults.
+ * @param {IHttpCacheItem[] | null} preloadedCache - Preloaded cache items.
+ * @param {...HttpFeature<HttpFeatureKind>} features - Additional HTTP features.
+ * @returns {EnvironmentProviders} - The environment providers for the HTTP client with cache.
  */
-export function provideHttpCacheClient(cacheSettings: IHttpCacheSettings | null = null, ...features: HttpFeature<HttpFeatureKind>[]): EnvironmentProviders {
+export function provideHttpClientWithCache(cacheSettings: IHttpCacheSettings | null = null, preloadedCache: IHttpCacheItem[] | null = null, ...features: HttpFeature<HttpFeatureKind>[]): EnvironmentProviders {
   const defaultSettings = provideDefaultHttpCacheSettings();
   const mergedSettings = { ...defaultSettings, ...cacheSettings };
   const providers: Provider[] = [
     { provide: HTTP_CACHE_SETTINGS, useValue: cacheSettings },
-    HttpCacheStore,
+    HttpCacheService,
   ]
-  if (mergedSettings.onlyUseCache === true) {
-    mergedSettings.enableClient = true;
-  }
-  if (mergedSettings.enableClient) {
-    if (mergedSettings.verbose) {
-      console.log("HttpCacheClient enabled")
-    }
-    providers.push({ provide: HttpClient, useClass: HttpCacheClient })
-    providers.push({ provide: HttpHandler, useClass: ɵHttpInterceptorHandler })
-  }
+  // interceptor
   if (mergedSettings.enableInterceptor) {
     if (mergedSettings.verbose) {
       console.log("HttpCachingInterceptor enabled")
     }
     providers.push({ provide: HTTP_INTERCEPTORS, useClass: HttpCachingInterceptor, multi: true })
   }
-  for (const feature of features) {
-    providers.push(...feature.ɵproviders);
+  // preloaded cache
+  if (preloadedCache) {
+    providers.push({ provide: PRELOADED_HTTP_CACHE, useValue: preloadedCache });
   }
-  return makeEnvironmentProviders(providers);
+  return makeEnvironmentProviders([provideHttpClient(...features), ...providers]);
 }
 
 /**
- * Provides the default settings for the cache
+ * Provides the default settings for the cache.
+ *
+ * @returns {IHttpCacheSettings} - The default cache settings.
  */
 export function provideDefaultHttpCacheSettings(): IHttpCacheSettings {
   return {
-    enableClient: true,
     enableInterceptor: true,
-    cacheSource: "file",
-    onlyUseCache: false,
     verbose: false,
   }
 }

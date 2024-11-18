@@ -1,30 +1,52 @@
-import { HttpEvent, HttpEventType, HttpHandler, HttpInterceptor, HttpRequest } from "@angular/common/http";
-import { inject, Injectable } from "@angular/core";
-import { Observable, tap } from "rxjs";
-import { HttpCacheStore } from "./http-cache.store";
-import { HTTP_CACHE_SETTINGS } from "./settings-token";
+import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from "@angular/common/http";
+import { Injectable } from "@angular/core";
+import { Observable, of, tap } from "rxjs";
+import { HttpCacheService } from "./http-cache.service";
+import { HttpCacheClient } from "./http-cache-client.service";
 
-/** Also see {@link HttpCacheClient} */
+/**
+ * Intercepts HTTP requests and caches the responses.
+ * The intention behind creating this service was to cache responses without ever sending
+ * the request to the server while developing front-ends for REST API's to avoid API limits.
+ *
+ * @example
+ * ```ts
+ * import preloadedCache from './some-json-file.json';
+ *
+ * const appConfig: ApplicationConfig = {
+ *   providers: [
+ *     provideHttpCacheClient(cacheSettings, preloadedCache),
+ *   ]
+ * };
+ *
+ * bootstrapApplication(AppComponent, appConfig)
+ *   .catch((err) => console.error(err));
+ * ```
+ */
 @Injectable()
 export class HttpCachingInterceptor implements HttpInterceptor {
-  readonly settings = inject(HTTP_CACHE_SETTINGS);
+  /**
+   * @param {HttpCacheService} cacheService - The service used to cache HTTP responses.
+   */
   constructor(
-    private cacheStore: HttpCacheStore,
+    private cacheService: HttpCacheService,
   ) { }
 
+  /**
+   * Intercepts an outgoing HTTP request, handles it, and caches the response.
+   * If the response is already cached, it is returned immediately.
+   * @param {HttpRequest<any>} req - The outgoing HTTP request.
+   * @param {HttpHandler} handler - The next handler in the chain.
+   * @returns {Observable<HttpEvent<unknown>>} - An observable of the HTTP event.
+   */
   intercept(req: HttpRequest<any>, handler: HttpHandler): Observable<HttpEvent<unknown>> {
-    // Cache url results
-    return handler.handle(req).pipe(
-      tap(event => this.cacheResults(req, event))
-    );
-  }
-
-  cacheResults(req: HttpRequest<any>, event: HttpEvent<unknown>) {
-    if (event.type === HttpEventType.Response) {
-      if (this.settings.verbose) {
-        console.log("Caching results for", req.url);
+    var cached = this.cacheService.find(req);
+    if (cached) {
+      if (this.cacheService.settings.verbose) {
+        console.log("Returning cached response for", req.method, req.url, req.params);
       }
-      this.cacheStore.urlCache[req.url] = event;
+      return of(cached.response);
     }
+    return handler.handle(req).pipe(tap(event => this.cacheService.insert(req, event)));
   }
 }
