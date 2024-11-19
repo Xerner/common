@@ -49,8 +49,8 @@ export class HttpCacheService {
    * @returns The cache item or null if not found.
    */
   find<T>(request: HttpRequest<T>): IHttpCacheItem<T> | null
-  find<T>(method: string, url: string, params?: HttpParams): IHttpCacheItem<T> | null
-  find<T>(method: HttpRequest<T> | string, url?: string, params?: HttpParams): IHttpCacheItem<T> | null {
+  find<T>(method: string, url: string, params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }): IHttpCacheItem<T> | null
+  find<T>(method: HttpRequest<T> | string, url?: string, params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }): IHttpCacheItem<T> | null {
     var request = typeof method === "string" ? null : method;
     method = request === null ? method : request.method;
     url = request === null ? url : request.url;
@@ -78,8 +78,8 @@ export class HttpCacheService {
    * @returns True if the cache item exists, false otherwise.
    */
   has<T>(request: HttpRequest<T>): boolean;
-  has(method: string, url: string, params?: HttpParams): boolean;
-  has<T>(method: HttpRequest<T> | string, url?: string, params?: HttpParams): boolean {
+  has(method: string, url: string, params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }): boolean;
+  has<T>(method: HttpRequest<T> | string, url?: string, params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }): boolean {
     if (typeof method === "string") {
       if (url === undefined) {
         return false;
@@ -133,22 +133,23 @@ export class HttpCacheService {
    * @param params2 The second set of params.
    * @returns True if the params are equal, false otherwise.
    */
-  paramsAreEqual(params1?: HttpParams, params2?: HttpParams): boolean {
+  paramsAreEqual(params1?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }, params2?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }): boolean {
     if (params1 === undefined && params2 === undefined) {
       return true;
     }
     if (params1 === undefined || params2 === undefined) {
       return false;
     }
-    if (params1.keys().length !== params2.keys().length) {
+    var keys1 = this.getAllKeys(params1).sort();
+    var keys2 = this.getAllKeys(params2).sort();
+    if (keys1.length !== keys2.length) {
       return false;
     }
-    var keys1 = params1.keys().sort();
-    var keys2 = params2.keys().sort();
     var areKeysAndValuesEqual = keys1.every((key1, index) => {
-      var keysAreEqual = key1 === keys2[index];
-      var values1 = params1.getAll(key1)?.sort();
-      var values2 = params2.getAll(key1)?.sort();
+      var key2 = keys2[index];
+      var keysAreEqual = key1 === key2;
+      var values1 = this.getAllValues(key1, params1)?.sort();
+      var values2 = this.getAllValues(key2, params2)?.sort();
       if (values1 === undefined && values2 === undefined) {
         return true;
       }
@@ -172,8 +173,8 @@ export class HttpCacheService {
    */
   bust(): void
   bust<T>(request: HttpRequest<T>): void;
-  bust(method: string, url: string, params?: HttpParams): void;
-  bust<T>(method?: HttpRequest<T> | string, url?: string, params?: HttpParams): void {
+  bust(method: string, url: string, params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }): void;
+  bust<T>(method?: HttpRequest<T> | string, url?: string, params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }): void {
     if (method === undefined) {
       this._cache = [];
       return;
@@ -191,5 +192,25 @@ export class HttpCacheService {
       return;
     }
     this._cache = this.cache.filter((cacheItem) => cacheItem !== item);
+  }
+
+  private getAllKeys(params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }): string[] {
+    if (params === undefined) {
+      return [];
+    }
+    if (params instanceof HttpParams) {
+      return params.keys();
+    }
+    return Object.keys(params);
+  }
+
+  private getAllValues(key: string, params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }): string[] | null {
+    if (params === undefined) {
+      return [];
+    }
+    if (params instanceof HttpParams) {
+      return params.getAll(key);
+    }
+    return Array.isArray(params[key]) ? params[key] : [params[key]];
   }
 }

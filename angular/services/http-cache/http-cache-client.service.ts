@@ -44,13 +44,14 @@ export class HttpCacheClient extends HttpClient {
   override request<R>(method: string, url: string, options?: { body?: any; headers?: HttpHeaders | { [header: string]: string | string[]; }; context?: HttpContext; observe?: "body"; params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }; responseType?: "json"; reportProgress?: boolean; withCredentials?: boolean; transferCache?: { includeHeaders?: string[]; } | boolean; }): Observable<R>;
   override request(method: string, url: string, options?: { body?: any; headers?: HttpHeaders | { [header: string]: string | string[]; }; context?: HttpContext; params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }; observe?: "body" | "events" | "response"; reportProgress?: boolean; responseType?: "arraybuffer" | "blob" | "json" | "text"; withCredentials?: boolean; transferCache?: { includeHeaders?: string[]; } | boolean; }): Observable<any>;
   override request<R>(method: unknown, url?: unknown, options?: unknown): Observable<import("@angular/common/http").HttpEvent<R>> | Observable<ArrayBuffer> | Observable<Blob> | Observable<string> | Observable<import("@angular/common/http").HttpEvent<ArrayBuffer>> | Observable<import("@angular/common/http").HttpEvent<Blob>> | Observable<import("@angular/common/http").HttpEvent<string>> | Observable<import("@angular/common/http").HttpEvent<any>> | Observable<import("@angular/common/http").HttpEvent<R>> | Observable<import("@angular/common/http").HttpResponse<ArrayBuffer>> | Observable<import("@angular/common/http").HttpResponse<Blob>> | Observable<import("@angular/common/http").HttpResponse<string>> | Observable<import("@angular/common/http").HttpResponse<Object>> | Observable<import("@angular/common/http").HttpResponse<R>> | Observable<Object> | Observable<R> | Observable<any> {
-    if (this.cacheService.has(url as string)) {
+    var _options = options as { body?: any; headers?: HttpHeaders | { [header: string]: string | string[]; }; context?: HttpContext; observe?: "body"; params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }; reportProgress?: boolean; responseType: "arraybuffer"; withCredentials?: boolean; transferCache?: { includeHeaders?: string[]; } | boolean; };
+    if (this.cacheService.has(method as string, url as string, _options.params)) {
       if (this.settings.verbose) {
         console.log("No cached response for", url, "Fetching...");
       }
-      return super.request(method as string, url as string, options as { body?: any; headers?: HttpHeaders | { [header: string]: string | string[]; }; context?: HttpContext; observe?: "body"; params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }; reportProgress?: boolean; responseType: "arraybuffer"; withCredentials?: boolean; transferCache?: { includeHeaders?: string[]; } | boolean; });
+      return super.request(method as string, url as string, );
     }
-    var cachedResponse = this.cacheService.get(url as string);
-    return of(cachedResponse.body);
+    var cachedResponse = this.cacheService.find(method as string, url as string, _options.params);
+    return of(cachedResponse);
   }
 }

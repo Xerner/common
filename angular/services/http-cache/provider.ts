@@ -14,25 +14,42 @@ import { IHttpCacheItem } from "./interfaces/IHttpCache";
  * @param {...HttpFeature<HttpFeatureKind>} features - Additional HTTP features.
  * @returns {EnvironmentProviders} - The environment providers for the HTTP client with cache.
  */
-export function provideHttpClientWithCache(cacheSettings: IHttpCacheSettings | null = null, preloadedCache: IHttpCacheItem[] | null = null, ...features: HttpFeature<HttpFeatureKind>[]): EnvironmentProviders {
-  const defaultSettings = provideDefaultHttpCacheSettings();
-  const mergedSettings = { ...defaultSettings, ...cacheSettings };
-  const providers: Provider[] = [
-    { provide: HTTP_CACHE_SETTINGS, useValue: cacheSettings },
+export function provideHttpClientWithCache(cacheSettings: IHttpCacheSettings, ...features: HttpFeature<HttpFeatureKind>[]): EnvironmentProviders;
+export function provideHttpClientWithCache(cacheSettings: IHttpCacheSettings, preloadedCache?: IHttpCacheItem[], ...features: HttpFeature<HttpFeatureKind>[]): EnvironmentProviders
+export function provideHttpClientWithCache(cacheSettings: IHttpCacheSettings, ...args: any[]): EnvironmentProviders {
+  const settings = getCacheSettings(cacheSettings);
+  const providers: Provider | EnvironmentProviders[] = [
+    provideHttpClient(),
+    { provide: HTTP_CACHE_SETTINGS, useValue: settings },
     HttpCacheService,
   ]
-  // interceptor
-  if (mergedSettings.enableInterceptor) {
-    if (mergedSettings.verbose) {
+  addInterceptorIfEnabled(settings, providers);
+  if (args.length === 0) {
+    return makeEnvironmentProviders(providers);
+  }
+  // preloaded cache
+  const preloadedCache = getPreloadedCache(args);
+  providers.push({ provide: PRELOADED_HTTP_CACHE, useValue: preloadedCache });
+  return makeEnvironmentProviders(providers);
+}
+
+function addInterceptorIfEnabled(settings: IHttpCacheSettings, providers: Provider[]) {
+  if (settings.enableInterceptor) {
+    if (settings.verbose) {
       console.log("HttpCachingInterceptor enabled")
     }
     providers.push({ provide: HTTP_INTERCEPTORS, useClass: HttpCachingInterceptor, multi: true })
   }
-  // preloaded cache
-  if (preloadedCache) {
-    providers.push({ provide: PRELOADED_HTTP_CACHE, useValue: preloadedCache });
-  }
-  return makeEnvironmentProviders([provideHttpClient(...features), ...providers]);
+}
+
+function getCacheSettings(cacheSettings: IHttpCacheSettings): IHttpCacheSettings {
+  var defaultSettings = provideDefaultHttpCacheSettings();
+  return { ...defaultSettings, ...cacheSettings }
+}
+
+function getPreloadedCache(args: any[]): IHttpCacheItem[] {
+  const preloadedCache = args.length > 0 && Array.isArray(args[0]) ? args[0] :[];
+  return preloadedCache || [];
 }
 
 /**
