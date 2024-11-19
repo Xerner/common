@@ -33,7 +33,7 @@ export function provideHttpClientWithCache(cacheSettings: IHttpCacheSettings, ..
   // preloaded cache
   const preloadedCache = getPreloadedCache(args);
   providers.push({ provide: PRELOADED_HTTP_CACHE, useValue: preloadedCache });
-  return makeEnvironmentProviders([provideHttpClient(...features), ...providers]);
+  return makeEnvironmentProviders(providers);
 }
 
 function addInterceptorIfEnabled(settings: IHttpCacheSettings, providers: Provider[]) {
