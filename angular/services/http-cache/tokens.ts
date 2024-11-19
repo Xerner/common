@@ -1,6 +1,6 @@
 import { InjectionToken } from "@angular/core";
-import { IHttpCacheSettings } from "./interfaces/IHttpCacheSettings";
-import { IHttpCacheItem } from "./interfaces/IHttpCache";
+import { IHttpCacheSettings } from "./types/IHttpCacheSettings";
+import { IHttpCacheItem } from "./types/IHttpCacheItem";
 
 /**
  * Injection token for HTTP cache settings.

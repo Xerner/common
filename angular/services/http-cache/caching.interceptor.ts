@@ -50,7 +50,8 @@ export class HttpCachingInterceptor implements HttpInterceptor {
     var index = interceptors.findIndex(interceptor => interceptor instanceof HttpCachingInterceptor);
     if (cached) {
       if (this.cacheService.settings.verbose) {
-        console.log("Request found in cache. Ending interceptor chain early and returning cached response for", req, "interceptors not run:", interceptors.slice(index + 1));
+        var interceptorsNotRan = interceptors.slice(index + 1);
+        console.log("Request found in cache. Ending interceptor chain early and returning cached response for", req.url + req.params.toString(), interceptorsNotRan.length, "interceptors not run", interceptorsNotRan);
       }
       return of(cached.response);
     }

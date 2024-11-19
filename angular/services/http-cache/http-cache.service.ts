@@ -1,8 +1,9 @@
 import { Inject, Injectable } from '@angular/core';
-import { IHttpCacheItem } from './interfaces/IHttpCache';
-import { IHttpCacheSettings } from './interfaces/IHttpCacheSettings';
+import { IHttpCacheItem, RawParams, RawParamValue } from './types/IHttpCacheItem';
+import { IHttpCacheSettings } from './types/IHttpCacheSettings';
 import { HTTP_CACHE_SETTINGS, PRELOADED_HTTP_CACHE } from './tokens';
 import { HttpEvent, HttpEventType, HttpParams, HttpRequest, HttpResponse } from '@angular/common/http';
+import { COMPARERS, LooseValue } from '../../../library/comparers';
 
 @Injectable({ providedIn: 'root' })
 export class HttpCacheService {
@@ -49,8 +50,8 @@ export class HttpCacheService {
    * @returns The cache item or null if not found.
    */
   find<T>(request: HttpRequest<T>): IHttpCacheItem<T> | null
-  find<T>(method: string, url: string, params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }): IHttpCacheItem<T> | null
-  find<T>(method: HttpRequest<T> | string, url?: string, params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }): IHttpCacheItem<T> | null {
+  find<T>(method: string, url: string, params?: HttpParams | RawParams): IHttpCacheItem<T> | null
+  find<T>(method: HttpRequest<T> | string, url?: string, params?: HttpParams | RawParams): IHttpCacheItem<T> | null {
     var request = typeof method === "string" ? null : method;
     method = request === null ? method : request.method;
     url = request === null ? url : request.url;
@@ -58,14 +59,11 @@ export class HttpCacheService {
     if (url === undefined) {
       return null;
     }
-    if (this.settings.verbose) {
-      console.log("Checking cache for", method, url, params);
-    }
     var item = this.cache.find((item) => {
       if (item.request.method !== method || item.request.url !== url) {
         return false;
       }
-      return this.paramsAreEqual(params, item.request.params);
+      return this.paramsAreBasicallyEqual(params, item.request.params);
     })
     return item ?? null;
   }
@@ -78,8 +76,8 @@ export class HttpCacheService {
    * @returns True if the cache item exists, false otherwise.
    */
   has<T>(request: HttpRequest<T>): boolean;
-  has(method: string, url: string, params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }): boolean;
-  has<T>(method: HttpRequest<T> | string, url?: string, params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }): boolean {
+  has(method: string, url: string, params?: HttpParams | RawParams): boolean;
+  has<T>(method: HttpRequest<T> | string, url?: string, params?: HttpParams | RawParams): boolean {
     if (typeof method === "string") {
       if (url === undefined) {
         return false;
@@ -128,41 +126,18 @@ export class HttpCacheService {
   }
 
   /**
-   * Compares two sets of HTTP params for equality.
+   * Compares two sets of HTTP params for equality. This method is not strict.
+   * It will consider values such as null, undefined, empty strings, and empty objects as having no 'value'.
+   * It will also consider two sets of query params equal if one has a missing query param that exists in the other, but the one that it exists in has no 'value'.
+   *
    * @param params1 The first set of params.
    * @param params2 The second set of params.
    * @returns True if the params are equal, false otherwise.
    */
-  paramsAreEqual(params1?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }, params2?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }): boolean {
-    if (params1 === undefined && params2 === undefined) {
-      return true;
-    }
-    if (params1 === undefined || params2 === undefined) {
-      return false;
-    }
-    var keys1 = this.getAllKeys(params1).sort();
-    var keys2 = this.getAllKeys(params2).sort();
-    if (keys1.length !== keys2.length) {
-      return false;
-    }
-    var areKeysAndValuesEqual = keys1.every((key1, index) => {
-      var key2 = keys2[index];
-      var keysAreEqual = key1 === key2;
-      var values1 = this.getAllValues(key1, params1)?.sort();
-      var values2 = this.getAllValues(key2, params2)?.sort();
-      if (values1 === undefined && values2 === undefined) {
-        return true;
-      }
-      if (values1 === undefined || values2 === undefined) {
-        return false;
-      }
-      if (values1.length !== values2.length) {
-        return false;
-      }
-      var allValuesAreEqual = values1!.every((value1, index) => value1 === values2![index]);
-      return keysAreEqual && allValuesAreEqual;
-    });
-    return areKeysAndValuesEqual;
+  paramsAreBasicallyEqual(params1?: HttpParams | RawParams, params2?: HttpParams | RawParams): boolean {
+    var looseParams1 = this.convertHttpParamsToLooseValue(params1);
+    var looseParams2 = this.convertHttpParamsToLooseValue(params2);
+    return COMPARERS.areBasicallyEqual(looseParams1, looseParams2);
   }
 
   /**
@@ -173,9 +148,12 @@ export class HttpCacheService {
    */
   bust(): void
   bust<T>(request: HttpRequest<T>): void;
-  bust(method: string, url: string, params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }): void;
-  bust<T>(method?: HttpRequest<T> | string, url?: string, params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }): void {
+  bust(method: string, url: string, params?: HttpParams | RawParams): void;
+  bust<T>(method?: HttpRequest<T> | string, url?: string, params?: HttpParams | RawParams): void {
     if (method === undefined) {
+      if (this.settings.verbose) {
+        console.log("Busting all cached http responses");
+      }
       this._cache = [];
       return;
     }
@@ -184,6 +162,9 @@ export class HttpCacheService {
       if (item === null) {
         return;
       }
+      if (this.settings.verbose) {
+        console.log("Busting cached http response for", method, url, params);
+      }
       this._cache = this.cache.filter((cacheItem) => cacheItem !== item);
       return;
     }
@@ -191,26 +172,17 @@ export class HttpCacheService {
     if (item === null) {
       return;
     }
+    if (this.settings.verbose) {
+      console.log("Busting cached http response for", method.method, method.url, method.params);
+    }
     this._cache = this.cache.filter((cacheItem) => cacheItem !== item);
   }
 
-  private getAllKeys(params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }): string[] {
-    if (params === undefined) {
-      return [];
-    }
+  private convertHttpParamsToLooseValue(params?: HttpParams | RawParams): LooseValue {
     if (params instanceof HttpParams) {
-      return params.keys();
+      var keys = params.keys();
+      return keys.map((key) => [key, params.get(key)!]);
     }
-    return Object.keys(params);
-  }
-
-  private getAllValues(key: string, params?: HttpParams | { [param: string]: string | number | boolean | ReadonlyArray<string | number | boolean>; }): string[] | null {
-    if (params === undefined) {
-      return [];
-    }
-    if (params instanceof HttpParams) {
-      return params.getAll(key);
-    }
-    return Array.isArray(params[key]) ? params[key] : [params[key]];
+    return params;
   }
 }

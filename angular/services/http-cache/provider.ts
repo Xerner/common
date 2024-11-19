@@ -2,9 +2,9 @@ import { EnvironmentProviders, makeEnvironmentProviders, Provider } from "@angul
 import { HttpCacheService } from "./http-cache.service";
 import { HTTP_INTERCEPTORS, HttpFeature, HttpFeatureKind, provideHttpClient } from "@angular/common/http";
 import { HTTP_CACHE_SETTINGS, PRELOADED_HTTP_CACHE } from "./tokens";
-import { IHttpCacheSettings } from "./interfaces/IHttpCacheSettings";
+import { IHttpCacheSettings } from "./types/IHttpCacheSettings";
 import { HttpCachingInterceptor } from "./caching.interceptor";
-import { IHttpCacheItem } from "./interfaces/IHttpCache";
+import { IHttpCacheItem } from "./types/IHttpCacheItem";
 
 /**
  * Provides an HTTP client with caching capabilities.
@@ -15,7 +15,7 @@ import { IHttpCacheItem } from "./interfaces/IHttpCache";
  * @returns {EnvironmentProviders} - The environment providers for the HTTP client with cache.
  */
 export function provideHttpClientWithCache(cacheSettings: IHttpCacheSettings, ...features: HttpFeature<HttpFeatureKind>[]): EnvironmentProviders;
-export function provideHttpClientWithCache(cacheSettings: IHttpCacheSettings, preloadedCache?: IHttpCacheItem[], ...features: HttpFeature<HttpFeatureKind>[]): EnvironmentProviders
+export function provideHttpClientWithCache(cacheSettings: IHttpCacheSettings, preloadedCache?: IHttpCacheItem<any>[], ...features: HttpFeature<HttpFeatureKind>[]): EnvironmentProviders
 export function provideHttpClientWithCache(cacheSettings: IHttpCacheSettings, ...args: any[]): EnvironmentProviders {
   const settings = getCacheSettings(cacheSettings);
   const features = getFeatures(args);
@@ -50,13 +50,13 @@ function getCacheSettings(cacheSettings: IHttpCacheSettings): IHttpCacheSettings
   return { ...defaultSettings, ...cacheSettings }
 }
 
-function getPreloadedCache(args: any[]): IHttpCacheItem[] {
+function getPreloadedCache(args: any[]): IHttpCacheItem<any>[] {
   const preloadedCache = args.length > 0 && Array.isArray(args[0]) ? args[0] :[];
   return preloadedCache || [];
 }
 
 function getFeatures(args: any[]): HttpFeature<HttpFeatureKind>[] {
-  return args.filter(arg => typeof arg === "object") || [];
+  return args.filter(arg => !Array.isArray(arg)) || [];
 }
 
 /**
