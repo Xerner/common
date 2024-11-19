@@ -26,17 +26,33 @@ export function provideHttpClientWithCache(cacheSettings: IHttpCacheSettings, ..
     ...features,
   ]
   // interceptor
-  if (mergedSettings.enableInterceptor) {
-    if (mergedSettings.verbose) {
+  addInterceptorIfEnabled(settings, providers);
+  if (args.length === 0) {
+    return makeEnvironmentProviders(providers);
+  }
+  // preloaded cache
+  const preloadedCache = getPreloadedCache(args);
+  providers.push({ provide: PRELOADED_HTTP_CACHE, useValue: preloadedCache });
+  return makeEnvironmentProviders([provideHttpClient(...features), ...providers]);
+}
+
+function addInterceptorIfEnabled(settings: IHttpCacheSettings, providers: Provider[]) {
+  if (settings.enableInterceptor) {
+    if (settings.verbose) {
       console.log("HttpCachingInterceptor enabled")
     }
     providers.push({ provide: HTTP_INTERCEPTORS, useClass: HttpCachingInterceptor, multi: true })
   }
-  // preloaded cache
-  if (preloadedCache) {
-    providers.push({ provide: PRELOADED_HTTP_CACHE, useValue: preloadedCache });
-  }
-  return makeEnvironmentProviders([provideHttpClient(...features), ...providers]);
+}
+
+function getCacheSettings(cacheSettings: IHttpCacheSettings): IHttpCacheSettings {
+  var defaultSettings = provideDefaultHttpCacheSettings();
+  return { ...defaultSettings, ...cacheSettings }
+}
+
+function getPreloadedCache(args: any[]): IHttpCacheItem[] {
+  const preloadedCache = args.length > 0 && Array.isArray(args[0]) ? args[0] :[];
+  return preloadedCache || [];
 }
 
 function getFeatures(args: any[]): HttpFeature<HttpFeatureKind>[] {
