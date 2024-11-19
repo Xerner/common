@@ -1,11 +1,13 @@
-import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from "@angular/common/http";
-import { Injectable } from "@angular/core";
+import { HTTP_INTERCEPTORS, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from "@angular/common/http";
+import { inject, Injectable } from "@angular/core";
 import { Observable, of, tap } from "rxjs";
 import { HttpCacheService } from "./http-cache.service";
-import { HttpCacheClient } from "./http-cache-client.service";
 
 /**
- * Intercepts HTTP requests and caches the responses.
+ * Intercepts HTTP requests and caches the responses, ending the interceptor chain early if a response is cached.
+ * Put this interceptor at the end of the interceptor chain, or at the bottom of the app.config.ts providers array,
+ * to ensure that it is the last interceptor to run.
+ *
  * The intention behind creating this service was to cache responses without ever sending
  * the request to the server while developing front-ends for REST API's to avoid API limits.
  *
@@ -15,6 +17,8 @@ import { HttpCacheClient } from "./http-cache-client.service";
  *
  * const appConfig: ApplicationConfig = {
  *   providers: [
+ *     ...
+ *     // last in the list to ensure it is the last interceptor to run
  *     provideHttpCacheClient(cacheSettings, preloadedCache),
  *   ]
  * };
@@ -40,10 +44,13 @@ export class HttpCachingInterceptor implements HttpInterceptor {
    * @returns {Observable<HttpEvent<unknown>>} - An observable of the HTTP event.
    */
   intercept(req: HttpRequest<any>, handler: HttpHandler): Observable<HttpEvent<unknown>> {
+    // this has to be injected here to prevent a circular dependency
+    var interceptors = inject(HTTP_INTERCEPTORS);
     var cached = this.cacheService.find(req);
+    var index = interceptors.findIndex(interceptor => interceptor instanceof HttpCachingInterceptor);
     if (cached) {
       if (this.cacheService.settings.verbose) {
-        console.log("Returning cached response for", req.method, req.url, req.params);
+        console.log("Request found in cache. Ending interceptor chain early and returning cached response for", req, "interceptors not run:", interceptors.slice(index + 1));
       }
       return of(cached.response);
     }
