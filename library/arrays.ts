@@ -22,6 +22,10 @@ export class ArrayService {
     return Array.from({ length }, (_, i) => array[i] ?? fillValue);
   }
 
+  distinct<T>(array: T[]) {
+    return [...new Set(array)];
+  }
+
   /**
    * Sorts the array in ascending order and ensures every item is contiguous without having a value of more than 1 difference between two entries. Does not sort the provided array in place
    * @param array The source array
