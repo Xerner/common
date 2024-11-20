@@ -1,9 +1,10 @@
 import { Inject, Injectable } from '@angular/core';
-import { IHttpCacheItem, RawParams, RawParamValue } from './types/IHttpCacheItem';
+import { IHttpCacheItem, ISerializedHttpCacheItem, ISerializedHttpRequest } from './types/IHttpCacheItem';
 import { IHttpCacheSettings } from './types/IHttpCacheSettings';
 import { HTTP_CACHE_SETTINGS, PRELOADED_HTTP_CACHE } from './tokens';
-import { HttpEvent, HttpEventType, HttpParams, HttpRequest, HttpResponse } from '@angular/common/http';
+import { HttpEvent, HttpEventType, HttpHeaders, HttpParams, HttpRequest, HttpResponse } from "@angular/common/http";
 import { COMPARERS, LooseValue } from '../../../library/comparers';
+import { RequestMethods } from './types/RequestMethods';
 
 @Injectable({ providedIn: 'root' })
 export class HttpCacheService {
@@ -27,7 +28,7 @@ export class HttpCacheService {
    */
   constructor(
     @Inject(HTTP_CACHE_SETTINGS) public settings: IHttpCacheSettings,
-    @Inject(PRELOADED_HTTP_CACHE) preloadedCache: IHttpCacheItem<any>[],
+    @Inject(PRELOADED_HTTP_CACHE) preloadedCache: ISerializedHttpCacheItem[],
   ) {
     this.initialize(preloadedCache);
   }
@@ -37,9 +38,29 @@ export class HttpCacheService {
    * @param cache The preloaded cache items.
    * @private
    */
-  private initialize(cache: IHttpCacheItem<any>[]) {
+  private initialize(cache: ISerializedHttpCacheItem[]) {
     console.log("Initializing cache with values", cache);
-    this._cache = cache;
+    var deserializedCache: IHttpCacheItem[] = cache.map<IHttpCacheItem>((serializedRequest) => {
+      var deserializedRequest: IHttpCacheItem = {
+        request: new HttpRequest<any>(
+          serializedRequest.request.method,
+          serializedRequest.request.url,
+          serializedRequest.request.body as any | null,
+          {
+            params: new HttpParams({ fromString: serializedRequest.request.params }),
+          }
+        ),
+        response: new HttpResponse({
+          body: serializedRequest.response.body,
+          headers: new HttpHeaders(serializedRequest.response.headers),
+          status: serializedRequest.response.status,
+          statusText: serializedRequest.response.statusText,
+          url: serializedRequest.response.url,
+        }),
+      }
+      return deserializedRequest;
+    });
+    this._cache = deserializedCache;
   }
 
   /**
@@ -50,8 +71,8 @@ export class HttpCacheService {
    * @returns The cache item or null if not found.
    */
   find<T>(request: HttpRequest<T>): IHttpCacheItem<T> | null
-  find<T>(method: string, url: string, params?: HttpParams | RawParams): IHttpCacheItem<T> | null
-  find<T>(method: HttpRequest<T> | string, url?: string, params?: HttpParams | RawParams): IHttpCacheItem<T> | null {
+  find<T>(method: string, url: string, params?: HttpParams): IHttpCacheItem<T> | null
+  find<T>(method: HttpRequest<T> | string, url?: string, params?: HttpParams): IHttpCacheItem<T> | null {
     var request = typeof method === "string" ? null : method;
     method = request === null ? method : request.method;
     url = request === null ? url : request.url;
@@ -76,8 +97,8 @@ export class HttpCacheService {
    * @returns True if the cache item exists, false otherwise.
    */
   has<T>(request: HttpRequest<T>): boolean;
-  has(method: string, url: string, params?: HttpParams | RawParams): boolean;
-  has<T>(method: HttpRequest<T> | string, url?: string, params?: HttpParams | RawParams): boolean {
+  has(method: string, url: string, params?: HttpParams): boolean;
+  has<T>(method: HttpRequest<T> | string, url?: string, params?: HttpParams): boolean {
     if (typeof method === "string") {
       if (url === undefined) {
         return false;
@@ -134,7 +155,7 @@ export class HttpCacheService {
    * @param params2 The second set of params.
    * @returns True if the params are equal, false otherwise.
    */
-  paramsAreBasicallyEqual(params1?: HttpParams | RawParams, params2?: HttpParams | RawParams): boolean {
+  paramsAreBasicallyEqual(params1?: HttpParams, params2?: HttpParams): boolean {
     var looseParams1 = this.convertHttpParamsToLooseValue(params1);
     var looseParams2 = this.convertHttpParamsToLooseValue(params2);
     return COMPARERS.areBasicallyEqual(looseParams1, looseParams2);
@@ -148,8 +169,8 @@ export class HttpCacheService {
    */
   bust(): void
   bust<T>(request: HttpRequest<T>): void;
-  bust(method: string, url: string, params?: HttpParams | RawParams): void;
-  bust<T>(method?: HttpRequest<T> | string, url?: string, params?: HttpParams | RawParams): void {
+  bust(method: string, url: string, params?: HttpParams): void;
+  bust<T>(method?: HttpRequest<T> | string, url?: string, params?: HttpParams): void {
     if (method === undefined) {
       if (this.settings.verbose) {
         console.log("Busting all cached http responses");
@@ -178,11 +199,53 @@ export class HttpCacheService {
     this._cache = this.cache.filter((cacheItem) => cacheItem !== item);
   }
 
-  private convertHttpParamsToLooseValue(params?: HttpParams | RawParams): LooseValue {
+  private convertHttpParamsToLooseValue(params?: HttpParams): LooseValue {
     if (params instanceof HttpParams) {
       var keys = params.keys();
       return keys.map((key) => [key, params.get(key)!]);
     }
     return params;
+  }
+
+  serialize(): ISerializedHttpCacheItem[] {
+    return this.cache.map((item) => {
+      var serializedItem: ISerializedHttpCacheItem = {
+        request: this.serializeRequest(item.request),
+        response: this.serializeResponse(item.response),
+      }
+      return serializedItem;
+    });
+  }
+
+  serializeHeaders(headers: HttpHeaders): Exclude<Pick<ISerializedHttpRequest, "headers">['headers'], string | Headers> {
+    return headers.keys().reduce((obj, key) => {
+      obj[key] = headers.get(key) ?? "";
+      return obj;
+    }, {} as Exclude<Pick<ISerializedHttpRequest, "headers">['headers'], string | Headers>);
+  }
+
+  serializeRequest<T>(request: HttpRequest<T>) {
+    return {
+      method: request.method,
+      url: request.url,
+      params: request.params.toString(),
+      body: request.body,
+      responseType: request.responseType,
+      withCredentials: request.withCredentials,
+      urlWithParams: request.urlWithParams,
+      headers: this.serializeHeaders(request.headers),
+    }
+  }
+
+  serializeResponse<T>(response: HttpResponse<T>) {
+    return {
+      body: response.body,
+      headers: this.serializeHeaders(response.headers),
+      status: response.status,
+      statusText: response.statusText,
+      url: response.url ?? "",
+      ok: response.ok,
+      type: response.type,
+    };
   }
 }

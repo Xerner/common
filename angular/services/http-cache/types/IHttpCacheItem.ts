@@ -1,35 +1,32 @@
-import { HttpParams, HttpRequest, HttpResponse } from "@angular/common/http";
+import { HttpRequest, HttpResponse } from "@angular/common/http";
 
-export interface IHttpCacheItem<T> {
-  request: HttpRequest<T> | SerializedHttpRequest;
-  response: HttpResponse<T> | SerializedHttpResponse;
+export interface IHttpCacheItem<T = any> {
+  request: HttpRequest<T>;
+  response: HttpResponse<T>;
 }
 
-export interface SerializedHttpRequest {
+export interface ISerializedHttpCacheItem {
+  request: ISerializedHttpRequest;
+  response: SerializedHttpResponse;
+}
+
+export interface ISerializedHttpRequest {
   url: string;
   body: string | object | null;
-  reportProgress: boolean;
   withCredentials: boolean;
   responseType: string;
   method: string;
-  headers: {
-    normalizedNames: object;
-    lazyUpdate: any;
-    headers: object;
-    lazyInit: any;
-  };
-  context: {
-    map: object;
-  };
-  params: HttpParams | RawParams;
+  headers: string | {
+    [name: string]: string | number | (string | number)[];
+  } | Headers;
+  params: string;
   urlWithParams: string;
 }
 
 export interface SerializedHttpResponse {
-  headers: {
-    normalizedNames: object;
-    lazyUpdate: any;
-  };
+  headers: string | {
+    [name: string]: string | number | (string | number)[];
+  } | Headers;
   status: number;
   statusText: string;
   url: string;
@@ -37,6 +34,3 @@ export interface SerializedHttpResponse {
   type: number;
   body: string | object | null;
 }
-
-export type RawParams = { [param: string]: RawParamValue; };
-export type RawParamValue = string | number | boolean | ReadonlyArray<string | number | boolean> | object | null;

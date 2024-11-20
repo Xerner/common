@@ -1,4 +1,6 @@
 import { HTTP_INTERCEPTORS, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from "@angular/common/http";
+// import { HTTP_INTERCEPTORS, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from "../../../../angular/packages/common/http";
+// import { HTTP_INTERCEPTORS, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { Observable, of, tap } from "rxjs";
 import { HttpCacheService } from "./http-cache.service";
@@ -47,10 +49,10 @@ export class HttpCachingInterceptor implements HttpInterceptor {
     // this has to be injected here to prevent a circular dependency
     var interceptors = inject(HTTP_INTERCEPTORS);
     var cached = this.cacheService.find(req);
-    var index = interceptors.findIndex(interceptor => interceptor instanceof HttpCachingInterceptor);
+    var interceptorIndex = interceptors.findIndex(interceptor => interceptor instanceof HttpCachingInterceptor);
     if (cached) {
       if (this.cacheService.settings.verbose) {
-        var interceptorsNotRan = interceptors.slice(index + 1);
+        var interceptorsNotRan = interceptors.slice(interceptorIndex + 1);
         console.log("Request found in cache. Ending interceptor chain early and returning cached response for", req.url + req.params.toString(), interceptorsNotRan.length, "interceptors not run", interceptorsNotRan);
       }
       return of(cached.response);

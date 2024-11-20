@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpInterceptor, HttpHandler, HttpRequest, HttpEventType } from '@angular/common/http';
+import { HttpInterceptor, HttpHandler, HttpRequest, HttpEventType } from "@angular/common/http";
 import { tap } from 'rxjs';
 import { LOADING_SERVICE_TOKEN } from './token';
 

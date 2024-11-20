@@ -6,20 +6,20 @@ import { TOKEN_SERVICE } from "./token";
 
 /**
  * Provides the necessary providers for bearer token authentication.
- * 
+ *
  * This function sets up the HTTP interceptor and the token provider service
  * for bearer token authentication in an Angular application.
- * 
+ *
  * @template T - The type of the token provider.
  * @param {new (...args: any[]) => T} tokenProvider - The token provider class.
  * @returns {Provider[]} The array of providers to be used in the Angular environment.
- * 
+ *
  * @example
  * ```ts
  * // In your Angular module
  * import { provideBearerTokenAuth } from './path/to/provider';
  * import { MyTokenProvider } from './path/to/my-token-provider';
- * 
+ *
  * NgModule({
  *   providers: [
  *     provideBearerTokenAuth(MyTokenProvider)
@@ -27,13 +27,13 @@ import { TOKEN_SERVICE } from "./token";
  * })
  * export class AppModule {}
  * ```
- * 
+ *
  * @example
  * ```ts
  * // In main.ts
  * import { provideBearerTokenAuth } from './path/to/provider';
  * import { MyTokenProvider } from './path/to/my-token-provider';
- * 
+ *
  * bootstrapApplication(AppComponent, { providers: provideBearerTokenAuth(MyTokenProvider) })
  *   .catch((err) => console.error(err));
  * ```

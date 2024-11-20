@@ -4,7 +4,7 @@ import { HTTP_INTERCEPTORS, HttpFeature, HttpFeatureKind, provideHttpClient } fr
 import { HTTP_CACHE_SETTINGS, PRELOADED_HTTP_CACHE } from "./tokens";
 import { IHttpCacheSettings } from "./types/IHttpCacheSettings";
 import { HttpCachingInterceptor } from "./caching.interceptor";
-import { IHttpCacheItem } from "./types/IHttpCacheItem";
+import { ISerializedHttpCacheItem } from "./types/IHttpCacheItem";
 
 /**
  * Provides an HTTP client with caching capabilities.
@@ -15,7 +15,7 @@ import { IHttpCacheItem } from "./types/IHttpCacheItem";
  * @returns {EnvironmentProviders} - The environment providers for the HTTP client with cache.
  */
 export function provideHttpClientWithCache(cacheSettings: IHttpCacheSettings, ...features: HttpFeature<HttpFeatureKind>[]): EnvironmentProviders;
-export function provideHttpClientWithCache(cacheSettings: IHttpCacheSettings, preloadedCache?: IHttpCacheItem<any>[], ...features: HttpFeature<HttpFeatureKind>[]): EnvironmentProviders
+export function provideHttpClientWithCache(cacheSettings: IHttpCacheSettings, preloadedCache?: ISerializedHttpCacheItem[], ...features: HttpFeature<HttpFeatureKind>[]): EnvironmentProviders
 export function provideHttpClientWithCache(cacheSettings: IHttpCacheSettings, ...args: any[]): EnvironmentProviders {
   const settings = getCacheSettings(cacheSettings);
   const features = getFeatures(args);
@@ -50,7 +50,7 @@ function getCacheSettings(cacheSettings: IHttpCacheSettings): IHttpCacheSettings
   return { ...defaultSettings, ...cacheSettings }
 }
 
-function getPreloadedCache(args: any[]): IHttpCacheItem<any>[] {
+function getPreloadedCache(args: any[]): ISerializedHttpCacheItem[] {
   const preloadedCache = args.length > 0 && Array.isArray(args[0]) ? args[0] :[];
   return preloadedCache || [];
 }

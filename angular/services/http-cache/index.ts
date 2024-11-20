@@ -1,4 +1,4 @@
-export { IHttpCacheItem, SerializedHttpRequest, SerializedHttpResponse } from "./types/IHttpCacheItem";
+export { IHttpCacheItem, ISerializedHttpCacheItem, ISerializedHttpRequest, SerializedHttpResponse } from "./types/IHttpCacheItem";
 export { IHttpCacheSettings } from "./types/IHttpCacheSettings";
 export { HttpCachingInterceptor } from "./caching.interceptor";
 export { HttpCacheService as HttpCacheStore } from "./http-cache.service";

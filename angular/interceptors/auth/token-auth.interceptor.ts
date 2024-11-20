@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpInterceptor, HttpHandler, HttpRequest } from '@angular/common/http';
+import { HttpInterceptor, HttpHandler, HttpRequest } from "@angular/common/http";
 import { TOKEN_SERVICE } from './token';
 import { ITokenService } from './ITokenService';
 
