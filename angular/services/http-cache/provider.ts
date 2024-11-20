@@ -46,7 +46,7 @@ function addInterceptorIfEnabled(settings: IHttpCacheSettings, providers: Provid
 }
 
 function getCacheSettings(cacheSettings: IHttpCacheSettings): IHttpCacheSettings {
-  var defaultSettings = provideDefaultHttpCacheSettings();
+  var defaultSettings = getDefaultCacheSettings();
   return { ...defaultSettings, ...cacheSettings }
 }
 
@@ -64,9 +64,10 @@ function getFeatures(args: any[]): HttpFeature<HttpFeatureKind>[] {
  *
  * @returns {IHttpCacheSettings} - The default cache settings.
  */
-export function provideDefaultHttpCacheSettings(): IHttpCacheSettings {
+export function getDefaultCacheSettings(): IHttpCacheSettings {
   return {
     enableInterceptor: true,
+    shouldCacheAuthorization: false,
     verbose: false,
   }
 }
