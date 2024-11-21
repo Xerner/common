@@ -5,7 +5,7 @@ import { DateTime } from 'luxon';
   name: 'DateTime',
   standalone: true,
 })
-export class DatetimePipe implements PipeTransform {
+export class DateTimePipe implements PipeTransform {
   transform(value: DateTime | string, ...args: unknown[]): unknown {
     if (typeof value === 'string') {
       value = DateTime.fromISO(value);
