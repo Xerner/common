@@ -1,7 +1,7 @@
 export class StringsService {
   /**
-   * Formats a string using positional or named arguments. 
-   * Either pass an object with key value pairs or pass the values as string arguments. 
+   * Formats a string using positional or named arguments.
+   * Either pass an object with key value pairs or pass the values as string arguments.
    * Does not support both at the same time.
    * @param str The string to format.
    * @param objectOrString The arguments to replace in the string in key value pairs.
@@ -39,6 +39,14 @@ export class StringsService {
    */
   private formatPositionalArgs(str: string, args: string[]): string {
     return str.replace(/{(\d+)}/g, (match, index) => args[index] !== undefined ? args[index] : match);
+  }
+
+  compare(a: string, b: string, aliasesForB?: string[]): number {
+    var matchingAlias = aliasesForB?.find(alias => alias.localeCompare(a) === 0);
+    if (matchingAlias !== undefined) {
+      return a.localeCompare(matchingAlias);
+    }
+    return a.localeCompare(b);
   }
 }
 

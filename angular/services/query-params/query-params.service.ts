@@ -62,7 +62,7 @@ export class QueryParamsService<TQueryParamKey> {
     params.keys.forEach((key) => {
       var keyIsNotAnExpectedQueryParam = Object.keys(this.keys).includes(key) == false;
       if (keyIsNotAnExpectedQueryParam) {
-        throw new Error(`Query parameter '${key}' is not a value in the provided enum`);
+        return;
       }
       var paramValues = params.getAll(key);
       var typedKey = key as keyof TQueryParamKey & string;
@@ -102,7 +102,7 @@ export class QueryParamsService<TQueryParamKey> {
   set<T>(name: keyof TQueryParamKey & string, value: T, queryParamsHandling: QueryParamsHandling = 'merge') {
     var keyIsNotAnExpectedQueryParam = Object.keys(this.keys).includes(name) == false;
     if (keyIsNotAnExpectedQueryParam) {
-      throw new Error(`Query parameter enumerator '${name}' is not a key in the provided enum`);
+      return;
     }
     var isEmptyArray = Array.isArray(value) && value.length == 0;
     if (value === undefined || isEmptyArray) {
