@@ -1,4 +1,4 @@
 import { InjectionToken } from "@angular/core";
-import { ITokenService } from "./ITokenService";
+import { IAuthTokenService } from "./IAuthTokenService";
 
-export const TOKEN_SERVICE = new InjectionToken<ITokenService>("BEARER_TOKEN_SERVICE_TOKEN");
+export const AUTH_TOKEN_SERVICE = new InjectionToken<IAuthTokenService>("AUTH_TOKEN_SERVICE_TOKEN");

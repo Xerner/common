@@ -1,10 +1,10 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpInterceptor, HttpHandler, HttpRequest } from "@angular/common/http";
-import { TOKEN_SERVICE } from './token';
-import { ITokenService } from './ITokenService';
+import { AUTH_TOKEN_SERVICE } from './token';
+import { IAuthTokenService } from './IAuthTokenService';
 
 @Injectable()
-export class TokenAuthInterceptor implements HttpInterceptor, ITokenService<string> {
+export class AuthTokenInterceptor implements HttpInterceptor, IAuthTokenService<string> {
   token = '';
 
   getToken() {
@@ -16,7 +16,7 @@ export class TokenAuthInterceptor implements HttpInterceptor, ITokenService<stri
   }
 
   intercept(req: HttpRequest<any>, next: HttpHandler) {
-    var bearerTokenService = inject(TOKEN_SERVICE)
+    var bearerTokenService = inject(AUTH_TOKEN_SERVICE)
     var token = bearerTokenService.getToken();
     req = req.clone({
       setHeaders: {

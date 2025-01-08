@@ -1,10 +1,11 @@
 import { Signal } from "@angular/core";
-import { ILoading } from "./ILoading";
+import { ILoadingItem } from "./ILoading";
 
 export interface ILoadingService {
   isAnyLoading: Signal<boolean>;
-  itemsLoading: Signal<ILoading<any>[]>;
+  itemsLoading: Signal<ILoadingItem<any>[]>;
 
-  startLoading(item: ILoading<any>): void;
-  stopLoading(item: ILoading<any>): void;
+  start(item: ILoadingItem<any>): void;
+  stop(item: ILoadingItem<any>): void;
+  update(item: ILoadingItem<any>): void;
 }

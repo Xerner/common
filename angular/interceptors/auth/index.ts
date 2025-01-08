@@ -1,4 +1,4 @@
-export * from './token-auth.interceptor';
+export * from './auth-token.interceptor';
 export * from './token';
-export * from './ITokenService';
+export * from './IAuthTokenService';
 export * from './provider';

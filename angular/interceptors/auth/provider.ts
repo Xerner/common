@@ -1,8 +1,8 @@
 import { HTTP_INTERCEPTORS } from "@angular/common/http";
 import { makeEnvironmentProviders, Provider } from "@angular/core";
-import { ITokenService } from "./ITokenService";
-import { TokenAuthInterceptor } from "./token-auth.interceptor";
-import { TOKEN_SERVICE } from "./token";
+import { IAuthTokenService } from "./IAuthTokenService";
+import { AuthTokenInterceptor } from "./auth-token.interceptor";
+import { AUTH_TOKEN_SERVICE } from "./token";
 
 /**
  * Provides the necessary providers for bearer token authentication.
@@ -11,7 +11,7 @@ import { TOKEN_SERVICE } from "./token";
  * for bearer token authentication in an Angular application.
  *
  * @template T - The type of the token provider.
- * @param {new (...args: any[]) => T} tokenProvider - The token provider class.
+ * @param {new (...args: any[]) => T} authTokenProviderClass - The token provider class.
  * @returns {Provider[]} The array of providers to be used in the Angular environment.
  *
  * @example
@@ -38,14 +38,16 @@ import { TOKEN_SERVICE } from "./token";
  *   .catch((err) => console.error(err));
  * ```
  */
-export function provideBearerTokenAuth<T extends ITokenService>(tokenProvider?: new (...args: any[]) => T) {
-  if (tokenProvider === undefined) {
-    tokenProvider = TokenAuthInterceptor as any;
+export function provideBearerTokenAuth<T extends IAuthTokenService>(
+    authTokenProviderClass?: new (...args: any[]) => T
+  ) {
+  if (authTokenProviderClass === undefined) {
+    authTokenProviderClass = AuthTokenInterceptor as any;
   }
   const providers: Provider[] = [
-    { provide: HTTP_INTERCEPTORS, useClass: TokenAuthInterceptor, multi: true },
-    { provide: TOKEN_SERVICE, useClass: tokenProvider! },
-    { provide: tokenProvider, useExisting: tokenProvider },
+    authTokenProviderClass!,
+    { provide: HTTP_INTERCEPTORS, useClass: AuthTokenInterceptor, multi: true },
+    { provide: AUTH_TOKEN_SERVICE, useExisting: authTokenProviderClass! },
   ]
 
   return makeEnvironmentProviders(providers);
