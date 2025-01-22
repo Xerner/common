@@ -6,12 +6,18 @@ import { Feature } from "./types/Feature";
 import { IFeatureFlag } from "./interfaces/IFeatureFlag";
 import { IFeatureView } from "./interfaces/IFeatureView";
 
-export function provideFeatureFlags<TFeature extends Feature, TView extends View>(features?: IFeatureFlag<TFeature>[], views?: IFeatureView<TView, TFeature>[]) {
+export function provideFeatureFlags<TFeature extends Feature, TView extends View>(
+    features?: IFeatureFlag<TFeature>[],
+    featureViews?: IFeatureView<TFeature, TView>[],
+  ) {
   const providers: Provider[] = [
-    { provide: FEATURE_FLAGS_TOKEN, useValue: features },
-    { provide: FEATURE_VIEWS_TOKEN, useValue: views },
-    FeatureService<TFeature, TView>
+    FeatureService<TFeature, TView>,
   ]
-
+  if (features) {
+    providers.push({ provide: FEATURE_FLAGS_TOKEN, useValue: features });
+  }
+  if (featureViews) {
+    providers.push({ provide: FEATURE_VIEWS_TOKEN, useValue: featureViews });
+  }
   return makeEnvironmentProviders(providers);
 }
