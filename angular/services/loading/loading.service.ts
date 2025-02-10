@@ -57,7 +57,7 @@ export class LoadingService implements ILoadingService {
     if (typeof source === 'string') {
       item = this.itemsLoading().find(item_ => item_.source === source);
     } else {
-      item = this.itemsLoading().find(item_ => item_ === item);
+      item = this.itemsLoading().find(item_ => item_ === source);
     }
     if (item == undefined) {
       return;

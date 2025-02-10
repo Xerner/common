@@ -1,4 +1,4 @@
-export interface ILoadingItem<T> {
+export interface ILoadingItem<T = any> {
   source: string;
   context?: T;
 }

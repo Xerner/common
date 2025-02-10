@@ -18,7 +18,7 @@ export class LoadingInterceptor implements HttpInterceptor {
     return next.handle(request)
       .pipe(tap(response => {
         loadingItem.context.response = response;
-        if (response.type === HttpEventType.Response) {
+        if (response.type === HttpEventType.Response || response.type === HttpEventType.Sent) {
           loadingService.stop(loadingItem);
         } else {
           loadingService.update(loadingItem);
